@@ -3,37 +3,40 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vote;
+use App\Models\Voter;
 use Illuminate\Http\Request;
 
 class VoteController extends Controller
 {
     public function receiveVote(Request $request)
     {
-        // Validate the incoming request data
         $validatedData = $request->validate([
             'voterid' => 'required',
-            'president' => 'required',
-            'mp' => 'required',
-            'councilor' => 'required',
+            'president' => 'nullable',
+            'mp' => 'nullable',
+            'councilor' => 'nullable',
         ]);
-
-        // Extract data from the request
+    
         $voterId = $validatedData['voterid'];
-        $president = $validatedData['president'];
-        $mp = $validatedData['mp'];
-        $councilor = $validatedData['councilor'];
-
-        // Save the vote data in the database
+        $president = $validatedData['president'] ?? 0;
+        $mp = $validatedData['mp'] ?? 0;
+        $councilor = $validatedData['councilor'] ?? 0;
+    
+        $voter = Voter::where('fingerprint_id', $voterId)->first();
+        if (!$voter) {
+            return response()->json(['error' => 'User not registered'], 400);
+        }
+    
         $vote = new Vote();
         $vote->voter_id = $voterId;
         $vote->president = $president;
         $vote->mp = $mp;
         $vote->councilor = $councilor;
         $vote->save();
-
+    
         return response()->json(['message' => 'Vote received and saved successfully']);
     }
-
+     
     public function getVotes()
 {
     $votes = Vote::all(); 
